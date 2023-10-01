@@ -275,14 +275,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "elgamal-encryption"
-version = "0.1.0"
-dependencies = [
- "curv-kzen",
- "elgamal",
-]
-
-[[package]]
 name = "elliptic-curve"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -296,6 +288,14 @@ dependencies = [
  "rand_core 0.6.4",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "epappas-secret-santa-lp"
+version = "0.1.0"
+dependencies = [
+ "curv-kzen",
+ "elgamal",
 ]
 
 [[package]]
