@@ -27,3 +27,31 @@ fn main() {
         alice_name, message_tag_string
     );
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_product_encryption() {
+        let group_id = SupportedGroups::FFDHE2048;
+
+        let alice_pp = ElGamalPP::generate_from_rfc7919(group_id);
+        let alice_key_pair = ElGamalKeyPair::generate(&alice_pp);
+
+        // homomorphic multiplication
+        let factor_1 = BigInt::from(3);
+        let factor_2 = BigInt::from(5);
+
+        let cipher = ElGamal::encrypt(&factor_1, &alice_key_pair.pk).unwrap();
+        let constant_cipher = ElGamal::encrypt(&factor_2, &alice_key_pair.pk).unwrap();
+
+        // homomorphic multiplication in cipher space
+        let product_cipher = ElGamal::mul(&cipher, &constant_cipher).unwrap();
+
+        // decrypt homomorphic product
+        let product_tag = ElGamal::decrypt(&product_cipher, &alice_key_pair.sk).unwrap();
+
+        assert_eq!(&factor_1 * &factor_2, product_tag);
+    }
+}
