@@ -1,3 +1,5 @@
+mod models;
+
 use curv::arithmetic::Converter;
 use curv::BigInt;
 use elgamal::{rfc7919_groups::SupportedGroups, ElGamal, ElGamalKeyPair, ElGamalPP};

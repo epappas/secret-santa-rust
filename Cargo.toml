@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 elgamal = { git = "https://github.com/ZenGo-X/rust-elgamal" , branch = "bignum_backend"}
 curv-kzen = { version = "^0.9.0", features = ["num-bigint"], default-features = false }
+rand = "0.8.4"
+
