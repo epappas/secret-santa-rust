@@ -43,29 +43,23 @@ impl PlayerTrait for Player {
     }
 
     fn find_giftee(&self, private_list: &PrivateList) -> Result<usize, AppError> {
-        let matching_result: BigInt = BigInt::from(1);
-
-        for i in 0..private_list.private_list.len() {
-            let y = BigInt::sample_below(&self.key_pair.pk.pp.q);
-            let c1 = BigInt::mod_pow(&private_list.g_s, &y, &self.key_pair.pk.pp.p);
-            let s = BigInt::mod_pow(&self.key_pair.pk.h, &y, &self.key_pair.pk.pp.p);
-            let c2 = BigInt::mod_mul(&s, &private_list.private_list[i], &self.key_pair.pk.pp.p);
-            let cipher: ElGamalCiphertext = ElGamalCiphertext {
-                c1,
-                c2,
-                pp: self.key_pair.pk.pp.clone(),
+        let l = private_list.private_list.len();
+        let mut index = l + 1;
+        for i in 0..l {
+            let candidate_ct = ElGamalCiphertext {
+                c1: private_list.g_s.clone(),
+                c2: private_list.private_list[i].clone(),
+                pp: private_list.pp.clone(),
             };
-
-            let result: BigInt = ElGamal::decrypt(&cipher, &self.key_pair.sk).unwrap();
-
-            println!("result: {}", result);
-
-            if result == matching_result {
-                return Ok(i);
+            if ElGamal::decrypt(&candidate_ct, &self.key_pair.sk) == Ok(BigInt::from(1)) {
+                index = i;
             }
         }
-
-        Err(AppError::NoGifteeFound)
+        if index == l + 1 {
+            return Err(AppError::NoGifteeFound);
+        } else {
+            return Ok(index + 1);
+        }
     }
 }
 
@@ -100,13 +94,15 @@ impl PrivateList {
 
     pub fn secure_shuffle(&mut self, player: &Player) {
         let mut rng = rand::thread_rng();
-        self.private_list.shuffle(&mut rng);
+        let mut pl_shuffled = self.private_list.clone();
 
-        let s = BigInt::sample_below(&player.pub_key.pp.g);
+        pl_shuffled.shuffle(&mut rng);
+
+        let s = BigInt::sample_below(&self.pp.q);
         self.g_s = BigInt::mod_pow(&self.g_s, &s, &player.pub_key.pp.p);
 
-        for element in &mut self.private_list {
-            *element = BigInt::mod_pow(&element, &s, &player.pub_key.pp.p);
+        for i in 0..pl_shuffled.len() {
+            self.private_list[i] = BigInt::mod_pow(&pl_shuffled[i], &s, &player.pub_key.pp.p);
         }
     }
 }
@@ -166,7 +162,7 @@ mod tests {
 
         match player_1.find_giftee(&private_list) {
             Ok(index) => {
-                assert!(index < pub_keys.len());
+                assert!(index <= pub_keys.len());
             }
             Err(e) => panic!("Expected Ok, got Err: {:?}", e),
         }
